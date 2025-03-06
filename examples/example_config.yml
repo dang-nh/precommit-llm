@@ -1,0 +1,37 @@
+# API key is retrieved from environment variable
+api_key_env_var: GEMINI_API_KEY
+
+# File types to analyze
+include_extensions:
+  - .py
+  - .js
+  - .jsx
+  - .ts
+  - .tsx
+  - .css
+  - .html
+  - .go
+  - .java
+
+# Patterns for files to exclude
+exclude_patterns:
+  - node_modules/
+  - venv/
+  - env/
+  - __pycache__/
+  - "*.min.js"
+  - "*.min.css"
+  - build/
+  - dist/
+
+# Maximum file size (KB)
+max_file_size_kb: 150
+
+# Show detailed information
+verbose: true
+
+# Check all files, not just staged files
+check_all_files: false
+
+# Fails the commit if issues are found
+fail_on_issues: false 
