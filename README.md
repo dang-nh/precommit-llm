@@ -15,7 +15,7 @@ A pre-commit hook using LLM models (specifically Google Gemini) to check code qu
 
 - Python 3.7+
 - Git
-- API key for Gemini (https://ai.google.dev/)
+- API key for Gemini (https://aistudio.google.com/apikey)
 
 ## Installation
 
@@ -28,7 +28,8 @@ pip install llm-precommit
 ### From Source
 
 ```bash
-git clone https://github.com/yourusername/llm-precommit.git
+pip install llm-precommit
+git clone https://github.com/dang-nh/llm-precommit.git
 cd llm-precommit
 pip install -e .
 ```

@@ -88,3 +88,5 @@ local.properties
 *.ipa
 *.xcarchive
 Pods/
+*.txt
+PKG-INFO

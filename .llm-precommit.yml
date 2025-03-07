@@ -1,0 +1,28 @@
+api_key_env_var: GEMINI_API_KEY
+include_extensions:
+- .py
+- .js
+- .jsx
+- .ts
+- .tsx
+- .css
+- .html
+- .go
+- .java
+- .c
+- .cpp
+- .rs
+exclude_patterns:
+- node_modules/
+- venv/
+- env/
+- __pycache__/
+- '*.min.js'
+- '*.min.css'
+- build/
+- dist/
+max_file_size_kb: 100
+verbose: false
+check_all_files: false
+custom_prompt_template: null
+fail_on_issues: false
