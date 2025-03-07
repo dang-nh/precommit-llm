@@ -1,0 +1,90 @@
+ # Dependency directories
+node_modules/
+jspm_packages/
+bower_components/
+.pnp/
+.pnp.js
+
+# Build outputs
+dist/
+build/
+out/
+*.min.js
+*.min.css
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*
+
+# Debug logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# IDE / Editor configs
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+*.sublime*
+.history/
+
+# Testing
+coverage/
+.nyc_output/
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+*.cover
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+.pytest_cache/
+.ipynb_checkpoints
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+.mtj.tmp/
+hs_err_pid*
+target/
+
+# Ruby
+*.gem
+*.rbc
+/.config
+/.bundle/
+vendor/bundle
+.rvmrc
+
+# Mobile development
+.gradle/
+local.properties
+*.apk
+*.aab
+*.ipa
+*.xcarchive
+Pods/
