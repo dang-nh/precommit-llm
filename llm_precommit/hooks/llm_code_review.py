@@ -5,12 +5,13 @@ Main pre-commit hook for code review using LLM.
 import os
 import sys
 import argparse
-from typing import Dict, Any, List, Optional
+import time
+from typing import Dict, Any, List, Optional, Tuple
 
 # Add parent directory to path to enable imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from llm_precommit.utils.gemini_client import GeminiClient
+from llm_precommit.utils.llm_client import LLMClientFactory
 from llm_precommit.utils.git_utils import (
     get_staged_files, 
     get_file_diff, 
@@ -19,6 +20,7 @@ from llm_precommit.utils.git_utils import (
 )
 from llm_precommit.utils.config import load_config, should_analyze_file
 from llm_precommit.utils.output_utils import OutputFormatter, print_summary
+from llm_precommit.utils.logging_utils import setup_logging
 
 
 def get_api_key(config: Dict[str, Any]) -> Optional[str]:
@@ -32,7 +34,13 @@ def get_api_key(config: Dict[str, Any]) -> Optional[str]:
         The API key or None if not found.
     """
     env_var_name = config.get("api_key_env_var", "GEMINI_API_KEY")
-    return os.environ.get(env_var_name)
+    api_key = os.environ.get(env_var_name)
+    
+    if not api_key:
+        print(f"Error: API key not found in environment variable {env_var_name}")
+        print("Please set the API key in your environment or config file.")
+    
+    return api_key
 
 
 def analyze_files(files: List[str], config: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
@@ -48,56 +56,73 @@ def analyze_files(files: List[str], config: Dict[str, Any]) -> Dict[str, Dict[st
     """
     api_key = get_api_key(config)
     if not api_key:
-        print(f"Error: API key not found in environment variable {config.get('api_key_env_var', 'GEMINI_API_KEY')}")
-        print("Please set the API key in your environment or config file.")
         return {}
     
-    # Initialize clients
-    gemini_client = GeminiClient(api_key=api_key)
-    formatter = OutputFormatter(verbose=config.get("verbose", False))
+    # Get the LLM model type from config
+    llm_type = config.get("llm_type", "gemini")
     
-    # Custom prompt template if provided
-    custom_prompt = config.get("custom_prompt_template")
+    try:
+        # Initialize clients
+        llm_client = LLMClientFactory.create(llm_type, api_key=api_key)
+        formatter = OutputFormatter(verbose=config.get("verbose", False))
+        
+        # Custom prompt template if provided
+        custom_prompt = config.get("custom_prompt_template")
+        
+        # Process each file
+        results = {}
+        for file_path in files:
+            if not should_analyze_file(file_path, config):
+                continue
+            
+            # Get file diff and content
+            diff = get_file_diff(file_path)
+            if not diff:
+                print(f"Skipping {file_path}: No changes detected")
+                continue
+            
+            # Get the full file content if available
+            file_content = get_file_content(file_path)
+            
+            # Analyze with LLM
+            try:
+                print(f"Analyzing {file_path}...")
+                start_time = time.time()
+                
+                result = llm_client.analyze_code_changes(
+                    diff=diff,
+                    file_path=file_path,
+                    file_content=file_content,
+                    prompt_template=custom_prompt,
+                )
+                
+                elapsed_time = time.time() - start_time
+                
+                # Add performance metrics
+                result["_meta"] = {
+                    "analysis_time_seconds": elapsed_time,
+                    "timestamp": time.time(),
+                    "model": llm_type
+                }
+                
+                # Display the formatted result
+                print(formatter.format_analysis_result(result, file_path))
+                
+                # Store the result
+                results[file_path] = result
+                
+            except Exception as e:
+                print(f"Error analyzing {file_path}: {e}")
+                results[file_path] = {
+                    "error": str(e),
+                    "parsing_error": "Failed to analyze file"
+                }
+        
+        return results
     
-    # Process each file
-    results = {}
-    for file_path in files:
-        if not should_analyze_file(file_path, config):
-            continue
-        
-        # Get file diff and content
-        diff = get_file_diff(file_path)
-        if not diff:
-            print(f"Skipping {file_path}: No changes detected")
-            continue
-        
-        # Get the full file content if available
-        file_content = get_file_content(file_path)
-        
-        # Analyze with LLM
-        try:
-            print(f"Analyzing {file_path}...")
-            result = gemini_client.analyze_code_changes(
-                diff=diff,
-                file_path=file_path,
-                file_content=file_content,
-                prompt_template=custom_prompt,
-            )
-            
-            # Display the formatted result
-            print(formatter.format_analysis_result(result, file_path))
-            
-            # Store the result
-            results[file_path] = result
-            
-        except Exception as e:
-            print(f"Error analyzing {file_path}: {e}")
-            results[file_path] = {
-                "error": str(e),
-                "parsing_error": "Failed to analyze file"
-            }
-    
-    return results
+    except Exception as e:
+        print(f"Error initializing LLM client: {e}")
+        return {}
 
 
 def main() -> int:
@@ -122,6 +147,9 @@ def main() -> int:
     if args.verbose:
         config["verbose"] = True
     
+    # Setup logging
+    setup_logging(verbose=config.get("verbose", False))
+    
     # Get files to analyze
     files = get_staged_files()
     if not files:
@@ -139,7 +167,7 @@ def main() -> int:
     has_issues = any(
         ("issues" in result and result["issues"]) or 
         ("security_concerns" in result and result["security_concerns"])
-        for result in results.values()
+        for result in results.values() if isinstance(result, dict)
     )
     
     # If configured to fail on issues, return non-zero exit code

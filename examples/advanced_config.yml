@@ -1,0 +1,129 @@
+# Advanced configuration example with additional features
+
+# LLM Provider Configuration
+llm_type: gemini  # Using Google's Gemini model
+model_name: gemini-2.0-flash-exp  # Specific model to use
+api_key_env_var: GEMINI_API_KEY   # Environment variable for API key
+
+# File analysis configuration
+include_extensions:
+  - .py
+  - .js
+  - .jsx
+  - .ts
+  - .tsx
+  - .css
+  - .html
+  - .go
+  - .java
+  - .c
+  - .cpp
+  - .rs
+
+# Patterns for files to exclude
+exclude_patterns:
+  - node_modules/
+  - venv/
+  - env/
+  - __pycache__/
+  - "*.min.js"
+  - "*.min.css"
+  - build/
+  - dist/
+  - "*.generated.*"
+  - "*.g.*"
+
+# Advanced analysis options
+max_file_size_kb: 200
+analyze_imports: true
+analyze_complexity: true
+analyze_documentation: true
+analyze_type_hints: true
+
+# Behavior settings
+verbose: true
+check_all_files: false
+fail_on_issues: true
+fail_on_severity: "high"  # Only fail on high or critical issues
+
+# Performance settings
+timeout_seconds: 30
+max_concurrent_analyses: 4
+
+# Custom prompt
+custom_prompt_template: |
+  # Code Review Analysis
+  
+  You are a senior code reviewer for a team with strict code quality standards. Your analysis must be thorough, specific, and actionable.
+  
+  ## File Information
+  - **Path**: {file_path}
+  - **Type**: Detect from file extension and content
+  
+  ## Changes to Review
+  ```
+  {diff}
+  ```
+  
+  {full_content_section}
+  
+  ## Review Focus Areas
+  For this review, carefully analyze for:
+  
+  1. **Critical Bugs**: Identify logical errors, edge cases, potential crashes, null/undefined reference errors
+  2. **Security Vulnerabilities**: Look for OWASP Top 10 issues, privilege escalation, data exposure
+  3. **Performance Problems**: Identify inefficient algorithms, memory leaks, unnecessary operations
+  4. **Code Style & Standards**: 
+     - Python: PEP 8, typing, docstrings
+     - JavaScript: ESLint (Airbnb), TypeScript best practices
+     - Java: Google Style Guide
+     - Other languages: Industry standard conventions
+  5. **Architecture & Design**: Evaluate patterns, cohesion, coupling, and future maintainability
+  
+  ## Special Considerations
+  - If reviewing Python code, check for proper type hints, exception handling, and docstrings
+  - If reviewing JavaScript/TypeScript, verify proper async/await usage and error handling
+  - If reviewing SQL statements, check for injection vulnerabilities and query performance
+  - If reviewing security-sensitive code, apply heightened scrutiny to potential vulnerabilities
+  
+  ## Output Requirements
+  Provide your feedback in the following JSON format:
+  {{
+      "issues": [
+          {{
+              "severity": "critical|high|medium|low|info",
+              "category": "bug|logic|syntax|performance|security|style",
+              "description": "Clear description of the issue",
+              "line_number": "line number or range (if applicable)",
+              "code_snippet": "Relevant code snippet",
+              "suggestion": "Specific code suggestion or approach to fix the issue",
+              "rationale": "Explanation of why this is a problem and the benefits of the fix"
+          }}
+      ],
+      "coding_convention_issues": [
+          {{
+              "line_number": "line number or range",
+              "convention": "The specific convention being violated (e.g., PEP 8 E201)",
+              "description": "Description of the convention issue",
+              "suggestion": "Example of correctly formatted code"
+          }}
+      ],
+      "security_concerns": [
+          {{
+              "severity": "critical|high|medium|low",
+              "vulnerability_type": "injection|xss|csrf|authentication|etc",
+              "description": "Description of the security concern",
+              "potential_impact": "What could happen if exploited",
+              "suggestion": "Specific code or approach to address the vulnerability",
+              "cwe_id": "Common Weakness Enumeration ID if applicable"
+          }}
+      ],
+      "general_feedback": "Overall assessment of code quality and suggestions for improvement",
+      "positive_aspects": [
+          "List specific positive aspects of the code changes"
+      ],
+      "file_type": "The type of file (e.g., Python, JavaScript, HTML, etc.)",
+      "summary": "A concise 2-3 sentence summary of key findings"
+  }}
+  
+  Your response must be valid JSON. Do not include any text before or after the JSON object. 

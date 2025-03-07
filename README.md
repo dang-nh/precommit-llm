@@ -1,15 +1,17 @@
 # LLM Pre-commit Hook
 
-A pre-commit hook using LLM models (specifically Google Gemini) to check code quality and coding conventions before committing.
+A pre-commit hook using LLM models to check code quality and coding conventions before committing. Currently supports Google Gemini with plans to expand to other LLM providers.
 
 ## Features
 
 - Automatically analyzes staged files before committing
 - Detects bugs, code quality issues, and coding convention problems
 - Warns about potential security concerns
-- Suggests fixes for issues
+- Suggests specific, actionable fixes for issues
+- Analyzes code in context with detailed feedback
 - Supports multiple file types (Python, JavaScript, TypeScript, Java, Go, etc.)
-- Customizable via configuration file
+- Highly customizable via configuration file
+- Language-specific guidelines and conventions
 
 ## Requirements
 
@@ -28,7 +30,6 @@ pip install llm-precommit
 ### From Source
 
 ```bash
-pip install llm-precommit
 git clone https://github.com/dang-nh/llm-precommit.git
 cd llm-precommit
 pip install -e .
@@ -52,6 +53,10 @@ The `.llm-precommit.yml` configuration file contains options for the pre-commit 
 ```yaml
 # API key is retrieved from environment variable
 api_key_env_var: GEMINI_API_KEY
+
+# LLM Model Configuration
+llm_type: gemini
+model_name: gemini-2.0-flash-exp
 
 # File types to analyze
 include_extensions:
@@ -94,6 +99,16 @@ custom_prompt_template: null
 # Fails the commit if issues are found
 fail_on_issues: false
 ```
+
+### Advanced Configuration
+
+For more advanced configurations, see the [examples/advanced_config.yml](examples/advanced_config.yml) file, which includes:
+
+- Language-specific analysis settings
+- Custom analysis focus areas
+- Performance tuning options
+- Specialized prompt templates
+- Severity-based failure conditions
 
 ## Usage
 
@@ -161,24 +176,40 @@ File: src/utils.py
 Issues:
   [MEDIUM] Potential bug: variable 'result' may be used before assignment
     Line: 45-50
+    Category: bug
     Suggestion: Initialize 'result' with a default value before the try-except block
+    Explanation: If an exception occurs before 'result' is assigned, using it later will raise NameError
 
 Coding Convention Issues:
   • Function 'calculate_total' is too long (30 lines)
     Line: 25-55
+    Convention: PEP 8 - Function Length
     Suggestion: Consider breaking it down into smaller functions
 
   • Variable names 'a', 'b', 'c' are not descriptive
     Line: 27-29
-    Suggestion: Use more descriptive variable names
+    Convention: PEP 8 - Naming Conventions
+    Suggestion: Use more descriptive variable names like 'amount', 'base_price', 'count'
 
 Security Concerns:
   [HIGH] Use of 'eval' function is a security risk
     Line: 42
-    Suggestion: Replace eval() with safer alternatives
+    Vulnerability Type: code-injection
+    Potential Impact: Remote code execution by attackers
+    Suggestion: Replace eval() with safer alternatives like ast.literal_eval() or json.loads()
+    CWE ID: CWE-95
+
+Positive Aspects:
+  • Good use of error handling with try/except blocks
+  • Consistent code formatting
+  • Helpful docstrings on public functions
 
 General Feedback:
-  The code could benefit from more comments and better error handling.
+  The code is well structured but could benefit from more input validation and 
+  better error handling. Consider adding type hints for better maintainability.
+
+Summary: The code has one medium severity bug and one high security risk that should 
+be addressed. It generally follows good practices but needs some refactoring for better maintainability.
 
 File Type: Python
 --------------------------------------------------------------------------------
@@ -193,6 +224,24 @@ Files with security concerns: 1
 ================================================================================
 
 Please review the issues above before committing.
+```
+
+## Extending 
+
+### Supporting Additional LLM Models
+
+The tool uses a modular design that can be extended to support other LLM models:
+
+1. Create a new client that implements the `BaseLLMClient` interface
+2. Register it with the `LLMClientFactory`
+3. Update your config to use the new LLM type
+
+## Testing
+
+Run the test suite with:
+
+```bash
+python -m unittest discover tests
 ```
 
 ## License

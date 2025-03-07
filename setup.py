@@ -22,9 +22,9 @@ setup(
     description="Pre-commit hook using LLM (Gemini) to check code quality and conventions",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    author="",
-    author_email="",
-    url="https://github.com/yourusername/llm-precommit",
+    author="Nguyen Hoang Dang",
+    author_email="dang.nh0407@gmail.com",
+    url="https://github.com/dang-nh/llm-precommit",
     packages=find_packages(),
     entry_points={
         "console_scripts": [
